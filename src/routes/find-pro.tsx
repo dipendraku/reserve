@@ -45,6 +45,7 @@ export default function FindProPage() {
 	const [providers, setProviders] = useState<Provider[]>([]);
 	const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [loadError, setLoadError] = useState(false);
 	const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
@@ -93,7 +94,16 @@ export default function FindProPage() {
 			setProviders(providersData);
 			setFilteredProviders(providersData);
 		} catch (err) {
-			console.error('Failed to load providers:', err);
+			const supabaseError = err && typeof err === 'object'
+				? err as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown }
+				: undefined;
+			console.error('Failed to load providers:', {
+				message: String(supabaseError?.message ?? err ?? 'Unknown error'),
+				code: supabaseError?.code,
+				details: supabaseError?.details,
+				hint: supabaseError?.hint,
+			});
+			setLoadError(true);
 		} finally {
 			setIsLoading(false);
 		}
@@ -316,6 +326,12 @@ export default function FindProPage() {
 				{locationError && (
 					<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
 						{locationError} — showing all businesses instead.
+					</div>
+				)}
+
+				{loadError && (
+					<div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+						Business listings could not be loaded. Check the browser console for the Supabase error details.
 					</div>
 				)}
 
