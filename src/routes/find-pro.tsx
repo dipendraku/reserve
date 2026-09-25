@@ -97,12 +97,13 @@ export default function FindProPage() {
 			const supabaseError = err && typeof err === 'object'
 				? err as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown }
 				: undefined;
-			console.error('Failed to load providers:', {
-				message: String(supabaseError?.message ?? err ?? 'Unknown error'),
-				code: supabaseError?.code,
-				details: supabaseError?.details,
-				hint: supabaseError?.hint,
-			});
+			const diagnostic = [
+				supabaseError?.code ? `code=${String(supabaseError.code)}` : '',
+				`message=${String(supabaseError?.message ?? (err instanceof Error ? err.message : err ?? 'Unknown error'))}`,
+				supabaseError?.details ? `details=${String(supabaseError.details)}` : '',
+				supabaseError?.hint ? `hint=${String(supabaseError.hint)}` : '',
+			].filter(Boolean).join(' | ');
+			console.error(`Failed to load providers: ${diagnostic}`);
 			setLoadError(true);
 		} finally {
 			setIsLoading(false);
